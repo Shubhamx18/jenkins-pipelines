@@ -33,7 +33,7 @@ stages{
       }
    stage("applying k8s manifests !!"){
        steps{
-        sh 'kubectl apply -f --validate=false Working-W-Jenkins/Docker-Kubernetes-Jenkins/deployment.yml -n myspace'
+        sh 'kubectl apply --validate=false -f Working-W-Jenkins/Docker-Kubernetes-Jenkins/deployment.yml -n myspace'
         sh 'kubectl get all -n myspace'
             }
         }
