@@ -23,7 +23,7 @@ stages{
        }
    stage("docker login !"){
       steps{
-         sh "echo $MY_LOGIN_PSW | docker login $MY_LOGIN_USR --password-stdin"
+         sh "echo $MY_LOGIN_PSW | docker login -u $MY_LOGIN_USR --password-stdin"
             }
           }
    stage("docker push now !"){
