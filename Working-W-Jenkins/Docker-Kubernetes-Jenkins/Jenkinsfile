@@ -32,11 +32,12 @@ stages{
          }
       }
    stage("applying k8s manifests !!"){
-       steps{
-        sh 'kubectl apply --validate=false -f Working-W-Jenkins/Docker-Kubernetes-Jenkins/deployment.yml -n myspace'
-        sh 'kubectl get all -n myspace'
-            }
-        }
+        steps{
+         sh 'export KUBECONFIG=~/.kube/config'
+         sh 'kubectl apply --validate=false -f Working-W-Jenkins/Docker-Kubernetes-Jenkins/deployment.yml -n myspace'
+         sh 'kubectl get all -n myspace'
+         }
+      }
    stage("done !"){
       steps{
          sh 'echo pipeline runs sucessfully !!'
