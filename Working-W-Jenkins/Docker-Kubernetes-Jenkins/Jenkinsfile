@@ -1,0 +1,46 @@
+pipeline{
+   agent any
+     triggers{
+       pollSCM(" * * * * * ")
+ }
+environment{
+  MY_LOGIN=credentials("dockerhub-creds")
+  IMAGE_NAME= "shubhamm18/jenkins-k8s"
+}
+stages{
+   stage("code checkout"){
+      steps{
+      git branch: "main",
+      url: "https://github.com/Shubhamx18/jenkins-pipelines.git"
+         }
+       }
+   stage("docker build to go ! "){
+     steps{
+        dir("Working-W-Jenkins/Docker-Kubernetes-Jenkins"){
+          sh "docker build -t $IMAGE_NAME:latest ."
+            }
+          }
+       }
+   stage("docker login !"){
+      steps{
+         sh "echo $MY_LOGIN_PSW | docker login $MY_LOGIN_USR --password-stdin"
+            }
+          }
+   stage("docker push now !"){
+      steps{ 
+         sh "docker push $IMAGE_NAME:latest"
+         }
+      }
+   stage("applying k8s manifests !!"){
+       steps{
+        sh 'kubectl apply -f deployment.yml -n myspace'
+        sh 'kubectl get all -n myspace'
+            }
+        }
+   stage("done !"){
+      steps{
+         sh 'echo pipeline runs sucessfully !!'
+              }
+          }
+     }
+}
