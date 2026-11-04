@@ -27,7 +27,7 @@ stages{
   stage("push to hub"){
     steps{
        sh 'docker push $IMAGE_NAME:latest'
-       }
-    }  
- }
-
+        } 
+      }  
+    }
+  }
