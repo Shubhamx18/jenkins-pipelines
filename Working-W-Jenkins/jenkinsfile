@@ -16,8 +16,10 @@ stages{
     }
   stage("build docker image"){
     steps{
-     sh 'docker build -t $IMAGE_NAME:latest .'
-       }
+       dir('Working-W-Jenkins'){
+       sh 'docker build -t $IMAGE_NAME:latest .'
+        }
+      }
     }
   stage("docker login"){
     steps{
