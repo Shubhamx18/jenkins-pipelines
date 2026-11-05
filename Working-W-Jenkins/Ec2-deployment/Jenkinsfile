@@ -14,6 +14,7 @@ pipeline {
                     url: "https://github.com/Shubhamx18/jenkins-pipelines.git"
             }
         }
+        
         stage("build docker image") {
             steps {
                 dir("Working-W-Jenkins/Ec2-deployment") {
@@ -29,19 +30,18 @@ pipeline {
             }
         }
 
-        stage("deploy to EKS") {
-    steps {
-        dir("Working-W-Jenkins/Ec2-deployment") {
-            sh 'kubectl config current-context'
-            sh 'aws eks --region ap-south-1 update-kubeconfig --name my-cluster'
-            sh 'kubectl apply -f deployment.yml'
+        stage("deploy to Kind") {
+            steps {
+                dir("Working-W-Jenkins/Ec2-deployment") {
+                    sh 'kubectl config use-context kind-my-cluster'
+                    sh 'kubectl apply -f deployment.yml'
+                }
+            }
         }
-    }
-}
 
         stage("output") {
             steps {
-                sh 'echo "deployed successfully to EKS!"'
+                sh 'echo "deployed successfully to local Kind cluster!"'
             }
         }
     }
