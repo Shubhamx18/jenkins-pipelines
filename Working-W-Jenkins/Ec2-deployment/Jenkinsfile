@@ -35,6 +35,7 @@ pipeline {
         stage("deploy to EC2") {
             steps {
                 sh '''
+	            chmod 600 $SSH_KEY
                     scp -i $SSH_KEY -o StrictHostKeyChecking=no Working-W-Jenkins/Ec2-deployment/deployment.yml $EC2_HOST:~/
                     ssh -i $SSH_KEY -o StrictHostKeyChecking=no $EC2_HOST "kubectl apply -f deployment.yml"
                 '''
