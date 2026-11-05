@@ -1,55 +1,90 @@
 pipeline {
-    agent any
+    agent { 
+        label 'ec2-worker' 
+    }
+    
     triggers {
         pollSCM('* * * * *')
     }
+
     environment {
-        IMAGE_NAME = "shubhamm18/flask-app"
-        MY_LOGIN   = credentials("dockerhub-creds")
-        EC2_HOST   = "ubuntu@100.27.219.137"
-        SSH_KEY    = credentials("ec2-ssh")
+        IMAGE_NAME     = "shubhamm18/flask-app"
+        IMAGE_TAG      = "${BUILD_NUMBER}"
+        DOCKER_CREDS   = credentials('dockerhub-creds')
+        KIND_CONTEXT   = "kind-my-cluster"
+        WORKING_DIR    = "Working-W-Jenkins/Ec2-deployment"
     }
+
+    options {
+        timeout(time: 15, unit: 'MINUTES')
+        ansiColor('xterm')
+        disableConcurrentBuilds()
+    }
+
     stages {
-        stage("checkout") {
+        stage('Checkout') {
             steps {
-                git branch: "main",
-                    url: "https://github.com/Shubhamx18/jenkins-pipelines.git"
+                git branch: 'main',
+                    url: 'https://github.com/Shubhamx18/jenkins-pipelines.git'
             }
         }
-        
-        stage("build docker image") {
+
+        stage('Build Image') {
             steps {
-                dir("Working-W-Jenkins/Ec2-deployment") {
-                    sh 'docker build -t $IMAGE_NAME:latest .'
+                dir("${env.WORKING_DIR}") {
+                    sh '''
+                        echo "===> Building Docker Image: ${IMAGE_NAME}:${IMAGE_TAG}"
+                        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
+                    '''
                 }
             }
         }
 
-        stage("docker login & push") {
-            steps {
-                sh 'echo $MY_LOGIN_PSW | docker login -u $MY_LOGIN_USR --password-stdin'
-                sh 'docker push $IMAGE_NAME:latest'
-            }
-        }
-
-        stage("deploy to EC2 Kind cluster") {
+        stage('Registry Login & Push') {
             steps {
                 sh '''
-                    chmod 600 $SSH_KEY
+                    echo "===> Authenticating with Docker Hub"
+                    echo "$DOCKER_CREDS_PSW" | docker login -u "$DOCKER_CREDS_USR" --password-stdin
                     
-                    echo "Transferring deployment file to EC2..."
-                    scp -i $SSH_KEY -o StrictHostKeyChecking=no -o ConnectTimeout=15 Working-W-Jenkins/Ec2-deployment/deployment.yml $EC2_HOST:~/
-                    
-                    echo "Applying deployment to Kind cluster on EC2..."
-                    ssh -i $SSH_KEY -o StrictHostKeyChecking=no -o ConnectTimeout=15 $EC2_HOST "kubectl apply -f deployment.yml"
+                    echo "===> Pushing Images to Registry"
+                    docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                    docker push ${IMAGE_NAME}:latest
                 '''
             }
         }
 
-        stage("output") {
+        stage('Deploy to Kind') {
             steps {
-                sh 'echo "deployed successfully to Kind cluster on EC2!"'
+                dir("${env.WORKING_DIR}") {
+                    sh '''
+                        echo "===> Setting Kubernetes Context"
+                        kubectl config use-context ${KIND_CONTEXT}
+                        
+                        echo "===> Applying Manifests"
+                        kubectl apply -f deployment.yml
+                        
+                        echo "===> Verifying Deployment Status"
+                        kubectl rollout status deployment/flask-app-deployment --timeout=60s || true
+                        kubectl get pods -l app=flask-app -o wide
+                    '''
+                }
             }
+        }
+    }
+
+    post {
+        always {
+            sh '''
+                echo "===> Cleaning Up Local Docker Artifacts"
+                docker image prune -f --filter "until=24h" || true
+            '''
+        }
+        success {
+            echo "SUCCESS: Pipeline completed build #${BUILD_NUMBER} and deployed to Kind cluster."
+        }
+        failure {
+            echo "FAILURE: Pipeline execution failed on build #${BUILD_NUMBER}."
         }
     }
 }
