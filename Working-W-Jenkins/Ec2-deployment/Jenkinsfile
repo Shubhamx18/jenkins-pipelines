@@ -2,12 +2,13 @@ pipeline {
     agent any
     triggers {
         pollSCM('* * * * *')
- }
- environment {
+    }
+    environment {
         IMAGE_NAME = "shubhamm18/flask-app"
         MY_LOGIN   = credentials("dockerhub-creds")
         EC2_HOST   = "ubuntu@ec2-54-160-247-182.compute-1.amazonaws.com"
- }
+        SSH_KEY    = credentials("ec2-ssh")
+    }
     stages {
         stage("checkout") {
             steps {
@@ -21,7 +22,7 @@ pipeline {
                     sh 'docker build -t $IMAGE_NAME:latest .'
                 }
             }
-       }
+        }
 
         stage("docker login & push") {
             steps {
@@ -32,10 +33,10 @@ pipeline {
 
         stage("deploy to EC2") {
             steps {
-                sshagent(credentials: ['ec2-ssh']) {
-                    sh 'scp -o StrictHostKeyChecking=no Working-W-Jenkins/Ec2-deployment/deployment.yml $EC2_HOST:~/'
-                    sh 'ssh -o StrictHostKeyChecking=no $EC2_HOST "sudo k3s kubectl apply -f deployment.yml"'
-                }
+                sh '''
+                    scp -i $SSH_KEY -o StrictHostKeyChecking=no Working-W-Jenkins/Ec2-deployment/deployment.yml $EC2_HOST:~/
+                    ssh -i $SSH_KEY -o StrictHostKeyChecking=no $EC2_HOST "kubectl apply -f deployment.yml"
+                '''
             }
         }
 
