@@ -1,0 +1,24 @@
+pipeline{
+    agent any
+    triggers{
+    pollSCM('* * * * *')
+    }
+environment{
+   IMAGE_NAME="shubhamm18/flask-app"
+   MY_LOGIN=credentials("dockerhub-creds")
+   AWS_LOGIN=credentials("aws-creds")
+ }
+
+stages{
+   stage("get chckout"){
+     steps{
+       branch: "main",
+       url: "https://github.com/Shubhamx18/jenkins-pipelines.git"
+          }
+        }
+   stage("build Docker Image using Dockerfile , present in Github"){
+       steps{
+          dir("")
+        sh 'docker build -t'
+  }
+}
