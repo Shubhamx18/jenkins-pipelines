@@ -6,7 +6,7 @@ pipeline {
     environment {
         IMAGE_NAME = "shubhamm18/flask-app"
         MY_LOGIN   = credentials("dockerhub-creds")
-        EC2_HOST   = "ubuntu@13.220.134.42"
+        EC2_HOST   = "ubuntu@3.87.87.197"
         SSH_KEY    = credentials("ec2-ssh")
     }
     stages {
