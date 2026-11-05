@@ -6,6 +6,8 @@ pipeline {
     environment {
         IMAGE_NAME = "shubhamm18/flask-app"
         MY_LOGIN   = credentials("dockerhub-creds")
+        EC2_HOST   = "ubuntu@54.83.111.110"
+        SSH_KEY    = credentials("ec2-ssh")
     }
     stages {
         stage("checkout") {
@@ -30,19 +32,5 @@ pipeline {
             }
         }
 
-        stage("deploy to Kind") {
-            steps {
-                dir("Working-W-Jenkins/Ec2-deployment") {
-                    sh 'kubectl config use-context kind-my-cluster'
-                    sh 'kubectl apply -f deployment.yml'
-                }
-            }
-        }
-
-        stage("output") {
-            steps {
-                sh 'echo "deployed successfully to local Kind cluster!"'
-            }
-        }
-    }
-}
+        stage("deploy to EC2 Kind cluster") {
+     
