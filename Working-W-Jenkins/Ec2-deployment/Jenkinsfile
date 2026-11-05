@@ -12,13 +12,14 @@ environment{
 stages{
    stage("get chckout"){
      steps{
-       branch: "main",
+       git branch: "main",
        url: "https://github.com/Shubhamx18/jenkins-pipelines.git"
           }
         }
    stage("build Docker Image using Dockerfile , present in Github"){
        steps{
-          dir("")
-        sh 'docker build -t'
+          dir("Working-W-Jenkins/Ec2-deployment")
+        sh 'docker build -t $IMAGE_NAME:latest .'
   }
+  
 }
