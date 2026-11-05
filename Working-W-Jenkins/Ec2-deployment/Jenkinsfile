@@ -20,6 +20,7 @@ stages{
        steps{
           dir("Working-W-Jenkins/Ec2-deployment")
         sh 'docker build -t $IMAGE_NAME:latest .'
-  }
-  
+              }
+          }
+      }
 }
