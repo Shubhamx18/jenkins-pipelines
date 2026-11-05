@@ -33,4 +33,23 @@ pipeline {
         }
 
         stage("deploy to EC2 Kind cluster") {
-     
+            steps {
+                sh '''
+                    chmod 600 $SSH_KEY
+                    
+                    echo "Transferring deployment file to EC2..."
+                    scp -i $SSH_KEY -o StrictHostKeyChecking=no -o ConnectTimeout=15 Working-W-Jenkins/Ec2-deployment/deployment.yml $EC2_HOST:~/
+                    
+                    echo "Applying deployment to Kind cluster on EC2..."
+                    ssh -i $SSH_KEY -o StrictHostKeyChecking=no -o ConnectTimeout=15 $EC2_HOST "kubectl apply -f deployment.yml"
+                '''
+            }
+        }
+
+        stage("output") {
+            steps {
+                sh 'echo "deployed successfully to Kind cluster on EC2!"'
+            }
+        }
+    }
+}
