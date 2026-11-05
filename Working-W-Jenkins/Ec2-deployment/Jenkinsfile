@@ -30,12 +30,14 @@ pipeline {
         }
 
         stage("deploy to EKS") {
-            steps {
-                dir("Working-W-Jenkins/Ec2-deployment") {
-                    sh 'kubectl apply -f deployment.yml'
-                }
-            }
+    steps {
+        dir("Working-W-Jenkins/Ec2-deployment") {
+            sh 'kubectl config current-context'
+            sh 'aws eks --region ap-south-1 update-kubeconfig --name my-cluster'
+            sh 'kubectl apply -f deployment.yml'
         }
+    }
+}
 
         stage("output") {
             steps {
