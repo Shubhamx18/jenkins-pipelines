@@ -6,7 +6,7 @@ pipeline{
 environment{
    IMAGE_NAME="shubhamm18/flask-app"
    MY_LOGIN=credentials("dockerhub-creds")
-   AWS_LOGIN=credentials("aws-creds")
+ //  AWS_LOGIN=credentials("aws-creds")
  }
 
 stages{
