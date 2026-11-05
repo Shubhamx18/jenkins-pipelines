@@ -1,34 +1,48 @@
-pipeline{
+pipeline {
     agent any
-    triggers{
-    pollSCM('* * * * *')
-    }
-environment{
-   IMAGE_NAME="shubhamm18/flask-app"
-   MY_LOGIN=credentials("dockerhub-creds")
- //  AWS_LOGIN=credentials("aws-creds")
+    triggers {
+        pollSCM('* * * * *')
  }
-
-stages{
-   stage("get chckout"){
-     steps{
-       git branch: "main",
-       url: "https://github.com/Shubhamx18/jenkins-pipelines.git"
-          }
-        }
-   stage("build Docker Image using Dockerfile , present in Github"){
-       steps{
-          dir("Working-W-Jenkins/Ec2-deployment"){
-        sh 'docker build -t $IMAGE_NAME:latest .'
-              }
+ environment {
+        IMAGE_NAME = "shubhamm18/flask-app"
+        MY_LOGIN   = credentials("dockerhub-creds")
+        EC2_HOST   = "ubuntu@ec2-54-160-247-182.compute-1.amazonaws.com"
+ }
+    stages {
+        stage("checkout") {
+            steps {
+                git branch: "main",
+                    url: "https://github.com/Shubhamx18/jenkins-pipelines.git"
             }
-         }
-   stage('docker login & push !!!'){
-      steps{
-        sh 'echo $MY_LOGIN_PSW  | docker login -u $MY_LOGIN_USR --password-stdin'
-        sh 'docker push $IMAGE_NAME:latest'
-        sh ' echo "push successful" '
-          }
+        }
+        stage("build docker image") {
+            steps {
+                dir("Working-W-Jenkins/Ec2-deployment") {
+                    sh 'docker build -t $IMAGE_NAME:latest .'
+                }
+            }
        }
-   }
-}  
+
+        stage("docker login & push") {
+            steps {
+                sh 'echo $MY_LOGIN_PSW | docker login -u $MY_LOGIN_USR --password-stdin'
+                sh 'docker push $IMAGE_NAME:latest'
+            }
+        }
+
+        stage("deploy to EC2") {
+            steps {
+                sshagent(credentials: ['ec2-ssh']) {
+                    sh 'scp -o StrictHostKeyChecking=no Working-W-Jenkins/Ec2-deployment/deployment.yml $EC2_HOST:~/'
+                    sh 'ssh -o StrictHostKeyChecking=no $EC2_HOST "sudo k3s kubectl apply -f deployment.yml"'
+                }
+            }
+        }
+
+        stage("output") {
+            steps {
+                sh 'echo "deployed successfully !"'
+            }
+        }
+    }
+}
