@@ -18,9 +18,10 @@ stages{
         }
    stage("build Docker Image using Dockerfile , present in Github"){
        steps{
-          dir("Working-W-Jenkins/Ec2-deployment")
+          dir("Working-W-Jenkins/Ec2-deployment"){
         sh 'docker build -t $IMAGE_NAME:latest .'
               }
-          }
-      }
+            }
+        }
+    }
 }
