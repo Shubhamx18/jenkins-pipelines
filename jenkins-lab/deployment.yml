@@ -14,4 +14,5 @@ spec:
       containers:
         - name: jenkins-app
           image: shubhamm18/jenkins-java:latest
+          imagePullPolicy: Always
 
