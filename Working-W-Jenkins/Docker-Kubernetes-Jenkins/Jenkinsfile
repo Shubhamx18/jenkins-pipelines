@@ -5,7 +5,7 @@ pipeline{
  }
 environment{
   MY_LOGIN=credentials("dockerhub-creds")
-  IMAGE_NAME= "shubhamm18/jenkins-k8s"
+  IMAGE_NAME= "r1gh1v/jenkins-k8s"
 }
 stages{
    stage("code checkout"){
